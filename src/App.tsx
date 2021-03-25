@@ -40,10 +40,13 @@ class App extends React.Component<{}, any> {
           _1st_dose_allocations: string;
           _2nd_dose_allocations: string;
         }, index: number) => {
+          const date = new Date(data.week_of_allocations)
+          console.log(date)
+
           return (
             <div key={index}>
               <p>{data.jurisdiction}</p>
-              <p>{data.week_of_allocations}</p>
+              <p>{`${date.getMonth()} ${date.getDay()}, ${date.getFullYear()}`}</p>
               <p>{data._1st_dose_allocations}</p>
               <p>{data._2nd_dose_allocations}</p>
             </div>
