@@ -16,28 +16,39 @@ async function getCdcData() {
     })
 }
 
-class App extends React.Component {
+class App extends React.Component<{}, any> {
   constructor(props: any) {
     super(props)
     this.state = {
-      cdcData: {
-        jurisdiction: "",
-        week_of_allocations: "",
-        _1st_dose_allocations: "",
-        _2nd_dose_allocations: "",
-      }
+      cdcData: []
     }
   }
 
   componentDidMount() {
-    const cdcData = getCdcData()
-    cdcData.then(data => console.log(data))
+    getCdcData()
+      .then(cdcData => this.setState({ cdcData }))
   }
 
   render() {
+    const { cdcData } = this.state
+
     return (
       <div className="App">
-        Content here
+        {cdcData.map((data: {
+          jurisdiction: string;
+          week_of_allocations: string;
+          _1st_dose_allocations: string;
+          _2nd_dose_allocations: string;
+        }, index: number) => {
+          return (
+            <div key={index}>
+              <p>{data.jurisdiction}</p>
+              <p>{data.week_of_allocations}</p>
+              <p>{data._1st_dose_allocations}</p>
+              <p>{data._2nd_dose_allocations}</p>
+            </div>
+          )
+        })}
       </div>
     );
   }
