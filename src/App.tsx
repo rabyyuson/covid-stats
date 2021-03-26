@@ -128,8 +128,8 @@ class App extends React.Component<{}, any> {
         datasets: [
           {
             label: 'Total Cases',
-            backgroundColor: '#bfbfbf',
-            borderColor: '#bfbfbf',
+            backgroundColor: '#dddddd',
+            borderColor: '#dddddd',
             data: totalNumberOfCases.map((
               caseAndDeath: {
                 submissionDate: string;
