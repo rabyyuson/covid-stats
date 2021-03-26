@@ -2,11 +2,13 @@ import fetch from 'cross-fetch'
 import usStates from 'states-us'
 import { format } from 'date-fns'
 import React from 'react'
+import './App.css';
 
 const CONFIG = {
   cdc_base_url: 'https://data.cdc.gov/resource/',
   app_token: '9UKsqjohDZQ5pRVegZbpkfSww',
   dataset_identifiers: {
+    cases_and_deaths_by_state_over_time: '9mfq-cb36',
     vaccine_allocation_distributions: {
       janssen: 'w9zu-fywh',
       moderna: 'b7pe-5nws',
@@ -22,18 +24,36 @@ interface vaccineAllocationDistribution {
   _2nd_dose_allocations: string;
 }
 
-async function getCdcData({
-  datasetIdentifer,
-  state,
-}: {
-  datasetIdentifer: string;
+interface casesAndDeaths {
+  submission_date: string;
   state: string;
+  tot_cases: string;
+  conf_cases: string;
+  prob_cases: string;
+  new_case: string;
+  pnew_case: string;
+  tot_death: string;
+  conf_death: string;
+  prob_death: string;
+  new_death: string;
+  pnew_death: string;
+  created_at: string;
+  consent_cases: string;
+  consent_deaths: string;
+}
+
+async function getCdcData({
+  datasetIdentifier,
+  filters,
+}: {
+  datasetIdentifier: string;
+  filters: string;
 }) {
   const {
     cdc_base_url,
     app_token,
   } = CONFIG
-  const requestUrl = `${cdc_base_url}${datasetIdentifer}.json?$$app_token=${app_token}&jurisdiction=${state}`
+  const requestUrl = `${cdc_base_url}${datasetIdentifier}.json?$$app_token=${app_token}${filters}`
 
   return await fetch(requestUrl) 
     .then(response => {
@@ -55,6 +75,7 @@ class App extends React.Component<{}, any> {
 
     this.state = {
       cdcData: {
+        casesAndDeathsByStateOverTime: {},
         vaccineAllocationDistributions: {
           janssen: {},
           moderna: {},
@@ -66,29 +87,42 @@ class App extends React.Component<{}, any> {
 
   handleOnChange(state: string) {
     const { dataset_identifiers } = CONFIG
-    const { vaccine_allocation_distributions: distributions } = dataset_identifiers
+    const {
+      cases_and_deaths_by_state_over_time,
+      vaccine_allocation_distributions: distributions,
+    } = dataset_identifiers
+
+    const [
+      stateName,
+      stateAbbreviation
+    ] = state.split(',')
 
     Promise.all([
       getCdcData({
-        datasetIdentifer: distributions.janssen,
-        state,
+        datasetIdentifier: cases_and_deaths_by_state_over_time,
+        filters: `&state=${stateAbbreviation}`,
       }),
       getCdcData({
-        datasetIdentifer: distributions.moderna,
-        state,
+        datasetIdentifier: distributions.janssen,
+        filters: `&jurisdiction=${stateName}`,
       }),
       getCdcData({
-        datasetIdentifer: distributions.pfizer,
-        state,
+        datasetIdentifier: distributions.moderna,
+        filters: `&jurisdiction=${stateName}`,
+      }),
+      getCdcData({
+        datasetIdentifier: distributions.pfizer,
+        filters: `&jurisdiction=${stateName}`,
       })
     ])
       .then(data => {
         this.setState({
           cdcData: {
+            casesAndDeathsByStateOverTime: data[0],
             vaccineAllocationDistributions: {
-              janssen: data[0],
-              moderna: data[0],
-              pfizer: data[0],
+              janssen: data[1],
+              moderna: data[2],
+              pfizer: data[3],
             }
           }
         })
@@ -96,15 +130,16 @@ class App extends React.Component<{}, any> {
   }
 
   render() {
-    const cdcData = this.state.cdcData
+    const { cdcData } = this.state
     const {
-      vaccineAllocationDistributions: distributions
+      casesAndDeathsByStateOverTime,
+      vaccineAllocationDistributions
     } = cdcData
     const {
       janssen,
       moderna,
       pfizer,
-    } = distributions
+    } = vaccineAllocationDistributions
 
     return (
       <div className="App">
@@ -117,7 +152,7 @@ class App extends React.Component<{}, any> {
               return (
                 <option
                   key={index}
-                  value={state.name}
+                  value={[state.name, state.abbreviation]}
                 >
                   {state.name}
                 </option>
@@ -126,44 +161,123 @@ class App extends React.Component<{}, any> {
           }
         </select>
 
-        {janssen && (
-          <>
-            <h2>Janssen</h2>
-            {this.renderDistributionData(janssen)}
-          </>
-        )}
+        <h2>Cases and Deaths</h2>
+        {this.renderCasesAndDeaths(casesAndDeathsByStateOverTime)}
 
-        {pfizer && (
-          <>
-            <h2>Pfizer</h2>
-            {this.renderDistributionData(pfizer)}
-          </>
-        )}
+        <h2>Janssen</h2>
+        {this.renderDistributionData(janssen)}
 
-        {moderna && (
-          <>
-            <h2>Moderna</h2>
-            {this.renderDistributionData(moderna)}
-          </>
-        )}
+        <h2>Pfizer</h2>
+        {this.renderDistributionData(pfizer)}
+
+        <h2>Moderna</h2>
+        {this.renderDistributionData(moderna)}
       </div>
     );
   }
 
   renderDistributionData(distribution: [vaccineAllocationDistribution]) {
-    return Array.isArray(distribution) && distribution.map((data, index) => {
-      const {
-        week_of_allocations,
-        _1st_dose_allocations,
-      } = data
-      const dateAllocated = format(new Date(week_of_allocations), 'MM/dd/yyyy')
-      return (
-        <div key={index}>
-          <p>{dateAllocated}</p>
-          <p>{_1st_dose_allocations}</p>
-        </div>
-      )
-    })
+    return (
+      <>
+        <table>
+          <thead>
+            <tr>
+              <td>Week of allocations</td>
+              <td>1st dose allocations</td>
+              <td>2nd dose allocations</td>
+            </tr>
+          </thead>
+          {Array.isArray(distribution) && distribution.map((data, index) => {
+            const {
+              jurisdiction,
+              week_of_allocations,
+              _1st_dose_allocations,
+              _2nd_dose_allocations,
+            } = data
+            const dateAllocated = format(new Date(week_of_allocations), 'MM/dd/yyyy')
+            return (
+                <tbody key={index}>
+                  <tr>
+                    <td>{dateAllocated}</td>
+                    <td>{_1st_dose_allocations}</td>
+                    <td>{_2nd_dose_allocations}</td>
+                  </tr>
+                </tbody>
+            )
+          })}
+        </table>
+      </>
+    )
+  }
+
+  renderCasesAndDeaths(casesAndDeaths: [casesAndDeaths]) {
+    return (
+      <>
+        <table>
+          <thead>
+            <tr>
+              <td>Submission date</td>
+              <td>Total number of cases</td>
+              <td>Total confirmed cases</td>
+              <td>Total probable cases</td>
+              <td>Number of new cases</td>
+              <td>Number of new probable cases</td>
+              <td>Total number of deaths</td>
+              <td>Total number of confirmed deaths</td>
+              <td>Total number of probable deaths</td>
+              <td>Number of new deaths</td>
+              <td>Number of new probable deaths</td>
+              <td>Date and time record was created</td>
+              <td>If Agree, then confirmed and probable cases are included. If Not Agree, then only total cases are included.</td>
+              <td>If Agree, then confirmed and probable deaths are included. If Not Agree, then only total deaths are included.</td>
+            </tr>
+          </thead>
+          {
+            Array.isArray(casesAndDeaths) && casesAndDeaths.map((data, index) => {
+              const {
+                submission_date,
+                state,
+                tot_cases,
+                conf_cases,
+                prob_cases,
+                new_case,
+                pnew_case,
+                tot_death,
+                conf_death,
+                prob_death,
+                new_death,
+                pnew_death,
+                created_at,
+                consent_cases,
+                consent_deaths,
+              } = data
+              const submissionDate = format(new Date(submission_date), 'MM/dd/yyyy')
+              const dateAndTimeRecordWasCreated = format(new Date(created_at), 'MM/dd/yyyy')
+              return (
+                <tbody key={index}>
+                  <tr>
+                    <td>{submissionDate}</td>
+                    <td>{tot_cases}</td>
+                    <td>{conf_cases}</td>
+                    <td>{prob_cases}</td>
+                    <td>{new_case}</td>
+                    <td>{pnew_case}</td>
+                    <td>{tot_death}</td>
+                    <td>{conf_death}</td>
+                    <td>{prob_death}</td>
+                    <td>{new_death}</td>
+                    <td>{pnew_death}</td>
+                    <td>{dateAndTimeRecordWasCreated}</td>
+                    <td>{consent_cases}</td>
+                    <td>{consent_deaths}</td>
+                  </tr>
+                </tbody>
+              )
+            })
+          }
+        </table>
+      </>
+    )
   }
 }
 
