@@ -70,7 +70,7 @@ async function getCdcData({
 
 class App extends React.Component<{}, any> {
   totalNumberOfCases: React.RefObject<HTMLCanvasElement>
-  totalConfirmedCases: React.RefObject<HTMLCanvasElement>
+  totalNumberOfCasesChart: Chart | undefined
 
   constructor(props: any) {
     super(props)
@@ -78,13 +78,11 @@ class App extends React.Component<{}, any> {
     this.handleOnChange = this.handleOnChange.bind(this)
     this.fetchCdcData = this.fetchCdcData.bind(this)
     this.totalNumberOfCases = React.createRef()
-    this.totalConfirmedCases = React.createRef()
     this.setTotalNumberOfCasesChart = this.setTotalNumberOfCasesChart.bind(this)
-    this.setTotalConfirmedCasesChart = this.setTotalConfirmedCasesChart.bind(this)
 
     this.state = {
       cdcData: {
-        casesAndDeathsByStateOverTime: {},
+        casesAndDeathsByStateOverTime: [],
         vaccineAllocationDistributions: {
           janssen: {},
           moderna: {},
@@ -94,9 +92,19 @@ class App extends React.Component<{}, any> {
     }
   }
 
-  setTotalConfirmedCasesChart() {
+  setTotalNumberOfCasesChart() {
     const { cdcData } = this.state
     const { casesAndDeathsByStateOverTime } = cdcData
+    if (!casesAndDeathsByStateOverTime.length) {
+      return
+    }
+
+    const totalNumberOfCases = casesAndDeathsByStateOverTime.map((
+      caseAndDeath: casesAndDeaths
+    ) => ({
+      submissionDate: caseAndDeath.submission_date,
+      totalNumberOfCase: caseAndDeath.tot_cases,
+    }))
     const totalConfirmedCases = casesAndDeathsByStateOverTime.map((
       caseAndDeath: casesAndDeaths
     ) => ({
@@ -104,41 +112,11 @@ class App extends React.Component<{}, any> {
       totalConfirmedCase: caseAndDeath.conf_cases,
     }))
 
-    new Chart(this.totalConfirmedCases.current || '', {
-      type: 'bar',
-      data: {
-        labels: totalConfirmedCases.map((
-          caseAndDeath: {
-            submissionDate: string;
-            totalConfirmedCase: string;
-          }
-        ) => format(new Date(caseAndDeath.submissionDate), 'MM/dd/yyyy')),
-        datasets: [{
-          label: 'Total Confirmed Cases',
-          backgroundColor: 'rgb(255, 99, 132)',
-          borderColor: 'rgb(255, 99, 132)',
-          data: totalConfirmedCases.map((
-            caseAndDeath: {
-              submissionDate: string;
-              totalConfirmedCase: string;
-            }
-          ) => caseAndDeath.totalConfirmedCase)
-        }]
-      },
-    });
-  }
+    if (this.totalNumberOfCasesChart) {
+      this.totalNumberOfCasesChart.destroy()
+    }
 
-  setTotalNumberOfCasesChart() {
-    const { cdcData } = this.state
-    const { casesAndDeathsByStateOverTime } = cdcData
-    const totalNumberOfCases = casesAndDeathsByStateOverTime.map((
-      caseAndDeath: casesAndDeaths
-    ) => ({
-      submissionDate: caseAndDeath.submission_date,
-      totalNumberOfCase: caseAndDeath.tot_cases,
-    }))
-
-    new Chart(this.totalNumberOfCases.current || '', {
+    this.totalNumberOfCasesChart = new Chart(this.totalNumberOfCases.current || '', {
       type: 'bar',
       data: {
         labels: totalNumberOfCases.map((
@@ -147,19 +125,32 @@ class App extends React.Component<{}, any> {
             totalNumberOfCase: string;
           }
         ) => format(new Date(caseAndDeath.submissionDate), 'MM/dd/yyyy')),
-        datasets: [{
-          label: 'Total Number of Cases',
-          backgroundColor: 'rgb(255, 99, 132)',
-          borderColor: 'rgb(255, 99, 132)',
-          data: totalNumberOfCases.map((
-            caseAndDeath: {
-              submissionDate: string;
-              totalNumberOfCase: string;
-            }
-          ) => caseAndDeath.totalNumberOfCase)
-        }]
+        datasets: [
+          {
+            label: 'Total Cases',
+            backgroundColor: '#bfbfbf',
+            borderColor: '#bfbfbf',
+            data: totalNumberOfCases.map((
+              caseAndDeath: {
+                submissionDate: string;
+                totalNumberOfCase: string;
+              }
+            ) => caseAndDeath.totalNumberOfCase)
+          },
+          {
+            label: 'Total Confirmed Cases',
+            backgroundColor: '#f23939',
+            borderColor: '#f23939',
+            data: totalConfirmedCases.map((
+              caseAndDeath: {
+                submissionDate: string;
+                totalConfirmedCase: string;
+              }
+            ) => caseAndDeath.totalConfirmedCase)
+          }
+        ]
       },
-    });
+    })
   }
 
   handleOnChange(state: string) {
@@ -178,10 +169,12 @@ class App extends React.Component<{}, any> {
       stateAbbreviation
     ] = state.split(',')
 
+    const today = new Date()
+
     Promise.all([
       getCdcData({
         datasetIdentifier: cases_and_deaths_by_state_over_time,
-        filters: `&state=${stateAbbreviation}&$order=submission_date ASC`,
+        filters: `&state=${stateAbbreviation}&$order=submission_date ASC&$where=submission_date >= '${format(today, 'yyyy-MM-01')}T00:00:00.000'`,
       }),
       getCdcData({
         datasetIdentifier: distributions.janssen,
@@ -208,7 +201,6 @@ class App extends React.Component<{}, any> {
           }
         })
         this.setTotalNumberOfCasesChart()
-        this.setTotalConfirmedCasesChart()
       })
   }
 
@@ -244,11 +236,8 @@ class App extends React.Component<{}, any> {
           }
         </select>
 
-        <h2>Total Number of Cases</h2>
+        <h2>Total Cases</h2>
         <canvas ref={this.totalNumberOfCases} />
-
-        <h2>Total Confirmed Cases</h2>
-        <canvas ref={this.totalConfirmedCases} />
 
         <h2>Cases and Deaths</h2>
         {this.renderCasesAndDeaths(casesAndDeathsByStateOverTime)}
@@ -278,7 +267,6 @@ class App extends React.Component<{}, any> {
           </thead>
           {Array.isArray(distribution) && distribution.map((data, index) => {
             const {
-              jurisdiction,
               week_of_allocations,
               _1st_dose_allocations,
               _2nd_dose_allocations,
@@ -325,7 +313,6 @@ class App extends React.Component<{}, any> {
             Array.isArray(casesAndDeaths) && casesAndDeaths.map((data, index) => {
               const {
                 submission_date,
-                state,
                 tot_cases,
                 conf_cases,
                 prob_cases,
