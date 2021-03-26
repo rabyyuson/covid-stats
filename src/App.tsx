@@ -2,6 +2,7 @@ import fetch from 'cross-fetch'
 import usStates from 'states-us'
 import { format } from 'date-fns'
 import React from 'react'
+import Chart from 'chart.js'
 import './App.css';
 
 const CONFIG = {
@@ -68,10 +69,18 @@ async function getCdcData({
 }
 
 class App extends React.Component<{}, any> {
+  totalNumberOfCases: React.RefObject<HTMLCanvasElement>
+  totalConfirmedCases: React.RefObject<HTMLCanvasElement>
+
   constructor(props: any) {
     super(props)
 
     this.handleOnChange = this.handleOnChange.bind(this)
+    this.fetchCdcData = this.fetchCdcData.bind(this)
+    this.totalNumberOfCases = React.createRef()
+    this.totalConfirmedCases = React.createRef()
+    this.setTotalNumberOfCasesChart = this.setTotalNumberOfCasesChart.bind(this)
+    this.setTotalConfirmedCasesChart = this.setTotalConfirmedCasesChart.bind(this)
 
     this.state = {
       cdcData: {
@@ -85,7 +94,79 @@ class App extends React.Component<{}, any> {
     }
   }
 
+  setTotalConfirmedCasesChart() {
+    const { cdcData } = this.state
+    const { casesAndDeathsByStateOverTime } = cdcData
+    const totalConfirmedCases = casesAndDeathsByStateOverTime.map((
+      caseAndDeath: casesAndDeaths
+    ) => ({
+      submissionDate: caseAndDeath.submission_date,
+      totalConfirmedCase: caseAndDeath.conf_cases,
+    }))
+
+    new Chart(this.totalConfirmedCases.current || '', {
+      type: 'bar',
+      data: {
+        labels: totalConfirmedCases.map((
+          caseAndDeath: {
+            submissionDate: string;
+            totalConfirmedCase: string;
+          }
+        ) => format(new Date(caseAndDeath.submissionDate), 'MM/dd/yyyy')),
+        datasets: [{
+          label: 'Total Confirmed Cases',
+          backgroundColor: 'rgb(255, 99, 132)',
+          borderColor: 'rgb(255, 99, 132)',
+          data: totalConfirmedCases.map((
+            caseAndDeath: {
+              submissionDate: string;
+              totalConfirmedCase: string;
+            }
+          ) => caseAndDeath.totalConfirmedCase)
+        }]
+      },
+    });
+  }
+
+  setTotalNumberOfCasesChart() {
+    const { cdcData } = this.state
+    const { casesAndDeathsByStateOverTime } = cdcData
+    const totalNumberOfCases = casesAndDeathsByStateOverTime.map((
+      caseAndDeath: casesAndDeaths
+    ) => ({
+      submissionDate: caseAndDeath.submission_date,
+      totalNumberOfCase: caseAndDeath.tot_cases,
+    }))
+
+    new Chart(this.totalNumberOfCases.current || '', {
+      type: 'bar',
+      data: {
+        labels: totalNumberOfCases.map((
+          caseAndDeath: {
+            submissionDate: string;
+            totalNumberOfCase: string;
+          }
+        ) => format(new Date(caseAndDeath.submissionDate), 'MM/dd/yyyy')),
+        datasets: [{
+          label: 'Total Number of Cases',
+          backgroundColor: 'rgb(255, 99, 132)',
+          borderColor: 'rgb(255, 99, 132)',
+          data: totalNumberOfCases.map((
+            caseAndDeath: {
+              submissionDate: string;
+              totalNumberOfCase: string;
+            }
+          ) => caseAndDeath.totalNumberOfCase)
+        }]
+      },
+    });
+  }
+
   handleOnChange(state: string) {
+    this.fetchCdcData(state)
+  }
+
+  fetchCdcData(state: string) {
     const { dataset_identifiers } = CONFIG
     const {
       cases_and_deaths_by_state_over_time,
@@ -100,7 +181,7 @@ class App extends React.Component<{}, any> {
     Promise.all([
       getCdcData({
         datasetIdentifier: cases_and_deaths_by_state_over_time,
-        filters: `&state=${stateAbbreviation}`,
+        filters: `&state=${stateAbbreviation}&$order=submission_date ASC`,
       }),
       getCdcData({
         datasetIdentifier: distributions.janssen,
@@ -126,6 +207,8 @@ class App extends React.Component<{}, any> {
             }
           }
         })
+        this.setTotalNumberOfCasesChart()
+        this.setTotalConfirmedCasesChart()
       })
   }
 
@@ -160,6 +243,12 @@ class App extends React.Component<{}, any> {
             })
           }
         </select>
+
+        <h2>Total Number of Cases</h2>
+        <canvas ref={this.totalNumberOfCases} />
+
+        <h2>Total Confirmed Cases</h2>
+        <canvas ref={this.totalConfirmedCases} />
 
         <h2>Cases and Deaths</h2>
         {this.renderCasesAndDeaths(casesAndDeathsByStateOverTime)}
