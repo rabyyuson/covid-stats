@@ -1,5 +1,6 @@
 import fetch from 'cross-fetch'
 import usStates from 'states-us'
+import { format } from 'date-fns'
 import React from 'react'
 
 const CONFIG = {
@@ -12,6 +13,13 @@ const CONFIG = {
       pfizer: 'saz5-9hgg',
     }
   }
+}
+
+interface vaccineAllocationDistribution {
+  jurisdiction: string;
+  week_of_allocations: string;
+  _1st_dose_allocations: string;
+  _2nd_dose_allocations: string;
 }
 
 async function getCdcData({
@@ -42,36 +50,66 @@ async function getCdcData({
 class App extends React.Component<{}, any> {
   constructor(props: any) {
     super(props)
+
+    this.handleOnChange = this.handleOnChange.bind(this)
+
     this.state = {
-      cdcData: []
+      cdcData: {
+        vaccineAllocationDistributions: {
+          janssen: {},
+          moderna: {},
+          pfizer: {},
+        }
+      }
     }
   }
 
-  componentDidMount() {
-    
+  handleOnChange(state: string) {
+    const { dataset_identifiers } = CONFIG
+    const { vaccine_allocation_distributions: distributions } = dataset_identifiers
+
+    Promise.all([
+      getCdcData({
+        datasetIdentifer: distributions.janssen,
+        state,
+      }),
+      getCdcData({
+        datasetIdentifer: distributions.moderna,
+        state,
+      }),
+      getCdcData({
+        datasetIdentifer: distributions.pfizer,
+        state,
+      })
+    ])
+      .then(data => {
+        this.setState({
+          cdcData: {
+            vaccineAllocationDistributions: {
+              janssen: data[0],
+              moderna: data[0],
+              pfizer: data[0],
+            }
+          }
+        })
+      })
   }
 
   render() {
-    const { cdcData } = this.state
-    const { dataset_identifiers } = CONFIG
-    const { vaccine_allocation_distributions } = dataset_identifiers
+    const cdcData = this.state.cdcData
+    const {
+      vaccineAllocationDistributions: distributions
+    } = cdcData
     const {
       janssen,
       moderna,
       pfizer,
-    } = vaccine_allocation_distributions
+    } = distributions
 
     return (
       <div className="App">
         <select
-          onChange={(event) => {
-            const selectedState = event.target.value
-            getCdcData({
-              datasetIdentifer: pfizer,
-              state: selectedState,
-            })
-              .then(cdcData => this.setState({ cdcData }))
-          }}
+          onChange={(event) => this.handleOnChange(event.target.value)}
         >
           <option>- - Choose a state - -</option>
           {
@@ -88,25 +126,44 @@ class App extends React.Component<{}, any> {
           }
         </select>
 
-        {cdcData.map((data: {
-          jurisdiction: string;
-          week_of_allocations: string;
-          _1st_dose_allocations: string;
-          _2nd_dose_allocations: string;
-        }, index: number) => {
-          const date = new Date(data.week_of_allocations)
+        {janssen && (
+          <>
+            <h2>Janssen</h2>
+            {this.renderDistributionData(janssen)}
+          </>
+        )}
 
-          return (
-            <div key={index}>
-              <p>{data.jurisdiction}</p>
-              <p>{`${date.getMonth()} ${date.getDay()}, ${date.getFullYear()}`}</p>
-              <p>{data._1st_dose_allocations}</p>
-              <p>{data._2nd_dose_allocations}</p>
-            </div>
-          )
-        })}
+        {pfizer && (
+          <>
+            <h2>Pfizer</h2>
+            {this.renderDistributionData(pfizer)}
+          </>
+        )}
+
+        {moderna && (
+          <>
+            <h2>Moderna</h2>
+            {this.renderDistributionData(moderna)}
+          </>
+        )}
       </div>
     );
+  }
+
+  renderDistributionData(distribution: [vaccineAllocationDistribution]) {
+    return Array.isArray(distribution) && distribution.map((data, index) => {
+      const {
+        week_of_allocations,
+        _1st_dose_allocations,
+      } = data
+      const dateAllocated = format(new Date(week_of_allocations), 'MM/dd/yyyy')
+      return (
+        <div key={index}>
+          <p>{dateAllocated}</p>
+          <p>{_1st_dose_allocations}</p>
+        </div>
+      )
+    })
   }
 }
 
