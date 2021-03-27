@@ -49,11 +49,15 @@ class App extends React.Component<{}, any> {
   newCasesRef: React.RefObject<HTMLCanvasElement>
   newCasesChart: Chart | undefined
 
+  confirmedDeathsRef: React.RefObject<HTMLCanvasElement>
+  confirmedDeathsChart: Chart | undefined
+
   constructor(props: any) {
     super(props)
 
     this.confirmedCasesRef = React.createRef()
     this.newCasesRef = React.createRef()
+    this.confirmedDeathsRef = React.createRef()
 
     this.handleOnChange = this.handleOnChange.bind(this)
     this.fetchCdcData = this.fetchCdcData.bind(this)
@@ -70,6 +74,7 @@ class App extends React.Component<{}, any> {
     filter,
     ref,
     label,
+    color,
     chart,
     chartType,
   }:
@@ -77,6 +82,7 @@ class App extends React.Component<{}, any> {
     filter: string;
     ref: React.RefObject<HTMLCanvasElement>;
     label: string;
+    color: string;
     chart: Chart | undefined,
     chartType: string;
   }) {
@@ -108,8 +114,8 @@ class App extends React.Component<{}, any> {
         datasets: [
           {
             label,
-            backgroundColor: '#f23939',
-            borderColor: '#f23939',
+            backgroundColor: color,
+            borderColor: color,
             data: cases.map((
               caseItem: caseAndDeath
             ) => caseItem[filter]),
@@ -157,18 +163,34 @@ class App extends React.Component<{}, any> {
             }
           }
         })
+
+        // Confirmed Cases
         this.setChart({
           filter: 'conf_cases',
           ref: this.confirmedCasesRef,
+          color: '#f23939',
           chart: this.confirmedCasesChart,
           chartType: 'bar',
           label: 'Confirmed Cases',
         })
+
+        // Confirmed Deaths
+        this.setChart({
+          filter: 'conf_death',
+          ref: this.confirmedDeathsRef,
+          color: '#f23939',
+          chart: this.confirmedDeathsChart,
+          chartType: 'line',
+          label: 'Confirmed Deaths',
+        })
+
+        // New Cases
         this.setChart({
           filter: 'new_case',
           ref: this.newCasesRef,
+          color: '#f23939',
           chart: this.newCasesChart,
-          chartType: 'line',
+          chartType: 'horizontalBar',
           label: 'New Cases',
         })
       })
@@ -180,6 +202,7 @@ class App extends React.Component<{}, any> {
 
     return (
       <div className="App">
+        <h1>Covid-19 Statistics</h1>
         <select
           style={{
             fontSize: '18px',
@@ -202,38 +225,51 @@ class App extends React.Component<{}, any> {
             })
           }
         </select>
+        
+        {Boolean(casesAndDeathsByStateOverTime.length) && (
+          <>
+            <div
+              style={{
+                width: '100%',
+              }}
+            >
+              <div style={{
+                position: 'relative',
+                width: '400px',
+                height: '300px',
+                display: 'inline-block',
+              }}>
+                <canvas ref={this.confirmedCasesRef} />
+              </div>
+              
+              <div style={{
+                position: 'relative',
+                width: '400px',
+                height: '300px',
+                display: 'inline-block',
+              }}>
+                <canvas ref={this.confirmedDeathsRef} />
+              </div>
 
-        <div
-          style={{
-            width: '100%',
-          }}
-        >
-          <div style={{
-            position: 'relative',
-            width: '400px',
-            height: '300px',
-            display: 'inline-block',
-          }}>
-            <canvas ref={this.confirmedCasesRef} />
-          </div>
+              <div style={{
+                position: 'relative',
+                width: '400px',
+                height: '300px',
+                display: 'inline-block',
+              }}>
+                <canvas ref={this.newCasesRef} />
+              </div>
+            </div>
 
-          <div style={{
-            position: 'relative',
-            width: '400px',
-            height: '300px',
-            display: 'inline-block',
-          }}>
-            <canvas ref={this.newCasesRef} />
-          </div>
-        </div>
-
-        <h2>Cases and Deaths</h2>
-        {this.renderCasesAndDeaths(casesAndDeathsByStateOverTime)}
+            <h2>Cases and Deaths</h2>
+            {this.renderCasesAndDeaths(casesAndDeathsByStateOverTime)}
+          </>
+        )}
       </div>
     );
   }
 
-  renderCasesAndDeaths(casesAndDeaths: [caseAndDeath]) {
+  renderCasesAndDeaths(casesAndDeathsByStateOverTime: [caseAndDeath]) {
     return (
       <>
         <table>
@@ -256,7 +292,7 @@ class App extends React.Component<{}, any> {
             </tr>
           </thead>
           {
-            Array.isArray(casesAndDeaths) && casesAndDeaths.map((data, index) => {
+            casesAndDeathsByStateOverTime.map((data, index) => {
               const {
                 submission_date,
                 tot_cases,
