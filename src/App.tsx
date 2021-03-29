@@ -469,6 +469,7 @@ class App extends React.Component<{}, any> {
       Position: 'relative',
       width: '500px',
       height: '300px',
+      margin: '0 40px 0 0',
     }
 
     return (
@@ -499,7 +500,7 @@ class App extends React.Component<{}, any> {
             <div style={canvasWrapperStyles}>
               <div style={{
                 position: 'relative',
-                width: '1000px',
+                width: '1060px',
                 height: '400px',
               }}>
                 <canvas ref={this.vaccineDistributionAndAdministrationRef} />
