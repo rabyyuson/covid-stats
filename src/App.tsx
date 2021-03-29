@@ -9,11 +9,13 @@ const CONFIG = {
   socrata: {
     app_token: '9UKsqjohDZQ5pRVegZbpkfSww',
     cdc_base_url: 'https://data.cdc.gov/resource/',
+    fusioncenter_base_url: 'https://fusioncenter.nhit.org/resource/',
     healthdata_base_url: 'https://healthdata.gov/resource/',
     dataset_identifiers: {
       cases_and_deaths_by_state_over_time: '9mfq-cb36',
       diagnostic_laboratory_polymerase_chain_reaction_testing: 'j8mb-icvb',
       patient_impact_and_hospital_capacity: 'g62h-syeh',
+      vaccine_distributions_and_administration: 'q8wb-4vhy',
     }
   }
 }
@@ -54,6 +56,7 @@ class App extends React.Component<{}, any> {
   newDeathsRef: React.RefObject<HTMLCanvasElement>
   polymeraseChainReactionPositiveRef: React.RefObject<HTMLCanvasElement>
   polymeraseChainReactionNegativeRef: React.RefObject<HTMLCanvasElement>
+  vaccineDistributionAndAdministrationRef: React.RefObject<HTMLCanvasElement>
 
   constructor(props: any) {
     super(props)
@@ -66,14 +69,18 @@ class App extends React.Component<{}, any> {
     this.newDeathsRef = React.createRef()
     this.polymeraseChainReactionPositiveRef = React.createRef()
     this.polymeraseChainReactionNegativeRef = React.createRef()
+    this.vaccineDistributionAndAdministrationRef = React.createRef()
 
     this.handleOnChange = this.handleOnChange.bind(this)
     this.fetchData = this.fetchData.bind(this)
     this.setChart = this.setChart.bind(this)
 
     this.state = {
-      cdcData: {
+      cdc: {
         casesAndDeathsByStateOverTime: [],
+      },
+      fusioncenter: {
+        vaccineDistributionsAndAdministration: [],
       },
       healthdata: {
         diagnosticLaboratoryPolymeraseChainReactionTesting: {},
@@ -87,6 +94,7 @@ class App extends React.Component<{}, any> {
     const { socrata } = CONFIG
     const {
       cdc_base_url,
+      fusioncenter_base_url,
       healthdata_base_url,
       dataset_identifiers,
     } = socrata
@@ -94,6 +102,7 @@ class App extends React.Component<{}, any> {
       cases_and_deaths_by_state_over_time,
       diagnostic_laboratory_polymerase_chain_reaction_testing,
       patient_impact_and_hospital_capacity,
+      vaccine_distributions_and_administration,
     } = dataset_identifiers
 
     const [
@@ -102,8 +111,8 @@ class App extends React.Component<{}, any> {
     ] = state.split(',')
 
     const today = new Date()
-    const month = today.getMonth()
-    const lastMonth = month ? month - 1 : month
+    const thisMonth = today.getMonth()
+    const lastMonth = thisMonth ? thisMonth - 1 : thisMonth
     const dayLastMonth = `${format(new Date(today.getFullYear(), lastMonth), 'yyyy-MM-01')}T00:00:00.000`
 
     Promise.all([
@@ -134,12 +143,22 @@ class App extends React.Component<{}, any> {
         datasetIdentifier: diagnostic_laboratory_polymerase_chain_reaction_testing,
         filters: `&overall_outcome=Negative&state=${stateAbbreviation}&$order=date ASC&$where=date >= '${dayLastMonth}'`,
       }),
+
+      // Vaccine Distributions and Administration
+      fetchJSONData({
+        baseUrl: fusioncenter_base_url,
+        datasetIdentifier: vaccine_distributions_and_administration,
+        filters: `&state_territory_federal_entity=${stateName}`,
+      }),
     ])
       .then(data => {
-        // console.log(data)
+        console.log(data)
         this.setState({
-          cdcData: {
+          cdc: {
             casesAndDeathsByStateOverTime: data[0],
+          },
+          fusioncenter: {
+            vaccineDistributionsAndAdministration: data[4],
           },
           healthdata: {
             patientImpactAndHospitalCapacity: data[1],
@@ -151,24 +170,31 @@ class App extends React.Component<{}, any> {
         })
 
         const {
-          cdcData,
+          cdc,
+          fusioncenter,
           healthdata,
         } = this.state
-        const { casesAndDeathsByStateOverTime } = cdcData
+        const {
+          casesAndDeathsByStateOverTime,
+        } = cdc
         const {
           diagnosticLaboratoryPolymeraseChainReactionTesting,
-          patientImpactAndHospitalCapacity
+          patientImpactAndHospitalCapacity,
         } = healthdata
         const {
           positive: polymeraseChainReactionPositive,
           negative: polymeraseChainReactionNegative,
         } = diagnosticLaboratoryPolymeraseChainReactionTesting
+        const {
+          vaccineDistributionsAndAdministration,
+        } = fusioncenter
 
         if (
           !casesAndDeathsByStateOverTime.length ||
           !patientImpactAndHospitalCapacity.length ||
           !polymeraseChainReactionPositive.length ||
-          !polymeraseChainReactionNegative.length
+          !polymeraseChainReactionNegative.length ||
+          !vaccineDistributionsAndAdministration.length
         ) {
           return
         }
@@ -191,7 +217,7 @@ class App extends React.Component<{}, any> {
         this.setChart({
           id: 'polymeraseChainReactionNegative',
           chartType: 'bar',
-          color: 'rgb(242,57,57,0.75)',
+          color: 'rgb(0,155,59,0.75)',
           data: polymeraseChainReactionNegative,
           filter: {
             date: 'date',
@@ -285,6 +311,38 @@ class App extends React.Component<{}, any> {
           label: 'New Deaths',
           ref: this.newDeathsRef,
         })
+
+        // Vaccine Distribution and Administration
+        this.setChart({
+          id: 'vaccineDistributionAndAdministration',
+          chartType: 'horizontalBar',
+          color: 'rgb(79,156,237,0.75)',
+          customData: {
+            labels: [
+              'Total Distributed',
+              'Total Administered',
+              'Distributed per 100k',
+              'Administered per 100k',
+              'People with 1st dose',
+              'People with 1st dose per 100k',
+              'People with 2nd dose',
+              'People with 2nd dose per 100k',
+            ],
+            datasetData: [
+              vaccineDistributionsAndAdministration[0].total_distributed,
+              vaccineDistributionsAndAdministration[0].total_administered,
+              vaccineDistributionsAndAdministration[0].distributed_per_100k,
+              vaccineDistributionsAndAdministration[0].administered_per_100k,
+              vaccineDistributionsAndAdministration[0].people_with_1_doses,
+              vaccineDistributionsAndAdministration[0].people_with_1_doses_per_100k,
+              vaccineDistributionsAndAdministration[0].people_with_2_doses,
+              vaccineDistributionsAndAdministration[0].people_with_2_doses_per_100k,
+            ],
+          },
+          data: casesAndDeathsByStateOverTime,
+          label: 'Vaccine Distribution and Administration',
+          ref: this.vaccineDistributionAndAdministrationRef,
+        })
       })
   }
 
@@ -292,6 +350,7 @@ class App extends React.Component<{}, any> {
     id,
     chartType,
     color,
+    customData,
     data,
     filter,
     label,
@@ -301,8 +360,12 @@ class App extends React.Component<{}, any> {
     id: string;
     chartType: string;
     color: string;
-    data: [dataItem],
-    filter: {
+    customData?: {
+      labels: string[];
+      datasetData: number[];
+    };
+    data: [dataItem];
+    filter?: {
       date: string;
       identifier: string;
     };
@@ -317,20 +380,38 @@ class App extends React.Component<{}, any> {
 
     const recentData = data.slice(-7)
     const canvasElement = ref.current || ''
+    let labels: string[] = []
+    if (customData && customData.labels && customData.labels.length) {
+      labels = customData.labels
+    }
+
+    if (filter && filter.date) {
+      labels = recentData.map((
+        dataItem: dataItem
+      ) => format(new Date(dataItem[filter.date]), 'MM/dd'))
+    }
+
+    let datasetData: number[] = []
+    if (customData && customData.datasetData && customData.datasetData.length) {
+      datasetData = customData.datasetData
+    }
+
+    if (filter && filter.identifier) {
+      datasetData = recentData.map((
+        dataItem: dataItem
+      ) => Number(dataItem[filter.identifier]))
+    }
+
     const newChart = new Chart(canvasElement, {
       type: chartType,
       data: {
-        labels: recentData.map((
-          dataItem: dataItem
-        ) => format(new Date(dataItem[filter.date]), 'MM/dd')),
+        labels,
         datasets: [
           {
             label,
             backgroundColor: color,
             borderColor: color,
-            data: recentData.map((
-              dataItem: dataItem
-            ) => Number(dataItem[filter.identifier])),
+            data: datasetData,
             fill: false
           }
         ]
@@ -353,10 +434,13 @@ class App extends React.Component<{}, any> {
 
   render() {
     const {
-      cdcData,
+      cdc,
+      fusioncenter,
       healthdata,
     } = this.state
-    const { casesAndDeathsByStateOverTime } = cdcData
+    const {
+      casesAndDeathsByStateOverTime,
+    } = cdc
     const {
       diagnosticLaboratoryPolymeraseChainReactionTesting,
       patientImpactAndHospitalCapacity,
@@ -365,6 +449,9 @@ class App extends React.Component<{}, any> {
       positive: polymeraseChainReactionPositive,
       negative: polymeraseChainReactionNegative,
     } = diagnosticLaboratoryPolymeraseChainReactionTesting
+    const {
+      vaccineDistributionsAndAdministration,
+    } = fusioncenter
 
     const headingStyle = {
       margin: '0 0 20px 0',
@@ -386,7 +473,7 @@ class App extends React.Component<{}, any> {
 
     return (
       <div className="App">
-        <h1 style={headingStyle}>Covid-19 Statistics</h1>
+        <h1 style={headingStyle}>Covid-19 Statistics by State</h1>
         <select
           style={stateSelectStyles}
           onChange={(event) => this.handleOnChange(event.target.value)}
@@ -405,6 +492,21 @@ class App extends React.Component<{}, any> {
             })
           }
         </select>
+
+        {Boolean(vaccineDistributionsAndAdministration.length) && (
+          <>
+            <br/><br/><br/>
+            <div style={canvasWrapperStyles}>
+              <div style={{
+                position: 'relative',
+                width: '1000px',
+                height: '400px',
+              }}>
+                <canvas ref={this.vaccineDistributionAndAdministrationRef} />
+              </div>
+            </div>
+          </>
+        )}
         
         {(
           (polymeraseChainReactionPositive && Boolean(polymeraseChainReactionPositive.length)) && 
