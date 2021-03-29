@@ -199,6 +199,38 @@ class App extends React.Component<{}, any> {
           return
         }
 
+        // Vaccine Distribution and Administration
+        this.setChart({
+          id: 'vaccineDistributionAndAdministration',
+          chartType: 'horizontalBar',
+          color: 'rgb(0,155,59,0.75)',
+          customData: {
+            labels: [
+              'Total Distributed',
+              'Total Administered',
+              'Distributed per 100k',
+              'Administered per 100k',
+              'People with 1st dose',
+              'People with 1st dose per 100k',
+              'People with 2nd dose',
+              'People with 2nd dose per 100k',
+            ],
+            datasetData: [
+              vaccineDistributionsAndAdministration[0].total_distributed,
+              vaccineDistributionsAndAdministration[0].total_administered,
+              vaccineDistributionsAndAdministration[0].distributed_per_100k,
+              vaccineDistributionsAndAdministration[0].administered_per_100k,
+              vaccineDistributionsAndAdministration[0].people_with_1_doses,
+              vaccineDistributionsAndAdministration[0].people_with_1_doses_per_100k,
+              vaccineDistributionsAndAdministration[0].people_with_2_doses,
+              vaccineDistributionsAndAdministration[0].people_with_2_doses_per_100k,
+            ],
+          },
+          data: casesAndDeathsByStateOverTime,
+          label: 'Vaccine Distribution and Administration',
+          ref: this.vaccineDistributionAndAdministrationRef,
+        })
+
         // Polymerase Chain Reaction Positive
         this.setChart({
           id: 'polymeraseChainReactionPositive',
@@ -217,7 +249,7 @@ class App extends React.Component<{}, any> {
         this.setChart({
           id: 'polymeraseChainReactionNegative',
           chartType: 'bar',
-          color: 'rgb(0,155,59,0.75)',
+          color: 'rgb(79,156,237,0.75)',
           data: polymeraseChainReactionNegative,
           filter: {
             date: 'date',
@@ -310,38 +342,6 @@ class App extends React.Component<{}, any> {
           },
           label: 'New Deaths',
           ref: this.newDeathsRef,
-        })
-
-        // Vaccine Distribution and Administration
-        this.setChart({
-          id: 'vaccineDistributionAndAdministration',
-          chartType: 'horizontalBar',
-          color: 'rgb(79,156,237,0.75)',
-          customData: {
-            labels: [
-              'Total Distributed',
-              'Total Administered',
-              'Distributed per 100k',
-              'Administered per 100k',
-              'People with 1st dose',
-              'People with 1st dose per 100k',
-              'People with 2nd dose',
-              'People with 2nd dose per 100k',
-            ],
-            datasetData: [
-              vaccineDistributionsAndAdministration[0].total_distributed,
-              vaccineDistributionsAndAdministration[0].total_administered,
-              vaccineDistributionsAndAdministration[0].distributed_per_100k,
-              vaccineDistributionsAndAdministration[0].administered_per_100k,
-              vaccineDistributionsAndAdministration[0].people_with_1_doses,
-              vaccineDistributionsAndAdministration[0].people_with_1_doses_per_100k,
-              vaccineDistributionsAndAdministration[0].people_with_2_doses,
-              vaccineDistributionsAndAdministration[0].people_with_2_doses_per_100k,
-            ],
-          },
-          data: casesAndDeathsByStateOverTime,
-          label: 'Vaccine Distribution and Administration',
-          ref: this.vaccineDistributionAndAdministrationRef,
         })
       })
   }
