@@ -500,9 +500,9 @@ class App extends React.Component<{}, any> {
         <p className="blurb">
           This tool gathers and visually presents publicly available covid-19 related datasets using charts to show time period cases, 
           vaccine data, testing statistics and hospitalized patients numbers. It collects resources from the following government agencies and public organizations:
-          {' '}<a href="https://www.cdc.gov/" target="_blank" rel="nofollow">Centers for Disease Control and Prevention</a>, 
-          {' '}<a href="https://healthdata.gov/" target="_blank" rel="nofollow">Health Data</a>, 
-          and <a href="http://www.nhit.org/" target="_blank" rel="nofollow">National Health IT Collaborative for the Underserved</a>.
+          {' '}<a href="https://www.cdc.gov/" target="_blank" rel="noreferrer">Centers for Disease Control and Prevention</a>, 
+          {' '}<a href="https://healthdata.gov/" target="_blank" rel="noreferrer">Health Data</a>, 
+          and <a href="http://www.nhit.org/" target="_blank" rel="noreferrer">National Health IT Collaborative for the Underserved</a>.
           {' '}This tool is intended for informational purposes only to inform the public of the virus' trends and also to compare historical data.
           <br/><br/>
           If you would like to contribute to the project check out the <a href="https://github.com/rabyyuson/covid-stats" target="_blank" rel="nofollow">project repository</a>. 
