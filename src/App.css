@@ -1,37 +1,56 @@
 .App {
-  max-width: 640px;
-  margin: 0 auto;
   padding: 20px;
 }
 
+.App .title {
+  display: flex;
+  flex-direction: row;
+  margin-bottom: 10px;
+}
+
+.App .logo {
+  width: 40px;
+  height: 40px;
+}
+
 .App h1 {
-  margin: 0;
-  font-size: 24px;
+  margin: 10px 0 0 10px;
+  font-size: 20px;
   color: #1f1f1f;
 }
 
 .App .blurb {
-  font-size: 16px;
-  line-height: 24px;
+  font-size: 14px;
+  line-height: 22px;
   color: #404040;
 }
 
 .App .dropdown {
   margin: 10px 0;
-  font-size: 18px;
+  font-size: 16px;
   padding: 10px;
+  width: 100%;
   font-weight: bold;
   color: #404040;
 }
 
-@media (min-width: 768px) {
-  .App {
-    max-width: 768px;
-  }
+.App .loading {
+  margin: 20px 0;
+  font-size: 14px;
+  line-height: 22px;
+  color: #404040;
 }
 
-@media (min-width: 1024px) {
-  .App {
-    max-width: 1024px;
-  }
+.App .footer {
+  margin: 40px 0;
+}
+
+.App .footer a {
+  font-size: 12px;
+  color: #505050;
+  font-weight: bold;
+}
+
+.App .footer a:hover {
+  color: #000000;
 }

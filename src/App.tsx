@@ -77,6 +77,7 @@ class App extends React.Component<{}, any> {
     this.handleOnChange = this.handleOnChange.bind(this)
     this.fetchData = this.fetchData.bind(this)
     this.setChart = this.setChart.bind(this)
+    this.renderData = this.renderData.bind(this)
 
     this.state = {
       cdc: {
@@ -90,11 +91,14 @@ class App extends React.Component<{}, any> {
         diagnosticLaboratoryPolymeraseChainReactionTesting: {},
         patientImpactAndHospitalCapacity: []
       },
-      charts: {}
+      charts: {},
+      loading: false,
     }
   }
 
   fetchData(state: string) {
+    this.setState({ loading: true })
+
     const { socrata } = CONFIG
     const {
       cdc_base_url,
@@ -164,6 +168,7 @@ class App extends React.Component<{}, any> {
       }),
     ])
       .then(data => {
+        console.log(data)
         this.setState({
           cdc: {
             casesAndDeathsByStateOverTime: data[0],
@@ -178,7 +183,8 @@ class App extends React.Component<{}, any> {
               positive: data[2],
               negative: data[3],
             },
-          }
+          },
+          loading: false,
         })
 
         const {
@@ -209,8 +215,8 @@ class App extends React.Component<{}, any> {
           color: 'rgb(0,155,59,0.75)',
           customData: {
             labels: [
-              'Total Distributed',
-              'Total Administered',
+              'Doses Distributed',
+              'Doses Administered',
               'Distributed per 100k',
               'Administered per 100k',
               'People with 1st dose',
@@ -237,13 +243,13 @@ class App extends React.Component<{}, any> {
         this.setChart({
           id: 'polymeraseChainReactionNegative',
           chartType: 'bar',
-          color: 'rgb(79,156,237,0.75)',
+          color: 'rgb(166,174,169,0.75)',
           data: polymeraseChainReactionNegative,
           filter: {
             date: 'date',
             identifier: 'total_results_reported',
           },
-          label: 'Polymerase Chain Reaction (PCR) Testing - Negative',
+          label: 'Polymerase Chain Reaction Testing - Negative',
           ref: this.polymeraseChainReactionNegativeRef,
         })
 
@@ -257,7 +263,7 @@ class App extends React.Component<{}, any> {
             date: 'date',
             identifier: 'total_results_reported',
           },
-          label: 'Polymerase Chain Reaction (PCR) Testing - Positive',
+          label: 'Polymerase Chain Reaction Testing - Positive',
           ref: this.polymeraseChainReactionPositiveRef,
         })
 
@@ -332,7 +338,7 @@ class App extends React.Component<{}, any> {
           ref: this.newCasesRef,
         })
 
-        // Confirmed Deaths
+        // New Deaths
         this.setChart({
           id: 'newDeaths',
           chartType: 'line',
@@ -349,13 +355,13 @@ class App extends React.Component<{}, any> {
         // Vaccine Distribution and Administration
         this.setChart({
           id: 'vaccineFederalPharmacyPartnershipForLongTermCareProgram',
-          chartType: 'horizontalBar',
+          chartType: 'bar',
           color: 'rgb(0,155,59,0.75)',
           customData: {
             labels: [
-              'Total Long Term Care Doses Administered',
-              'People in Long Term Care with 1st Dose',
-              'People in Long Term Care with 2nd Dose',
+              'Doses Administered',
+              'People with 1st Dose',
+              'People with 2nd Dose',
             ],
             datasetData: [
               vaccineFederalPharmacyPartnershipForLongTermCareProgram[0].total_ltc_doses_adminstered,
@@ -364,7 +370,7 @@ class App extends React.Component<{}, any> {
             ],
           },
           data: casesAndDeathsByStateOverTime,
-          label: 'Vaccine Federal Pharmacy Partnership for Long Term Care Program',
+          label: 'Federal Pharmacy Partnership for Long Term Care Program',
           ref: this.vaccineFederalPharmacyPartnershipForLongTermCareProgramRef,
         })
       })
@@ -441,7 +447,7 @@ class App extends React.Component<{}, any> {
             backgroundColor: color,
             borderColor: color,
             data: datasetData,
-            fill: false
+            fill: false,
           }
         ]
       },
@@ -454,7 +460,7 @@ class App extends React.Component<{}, any> {
     charts[id] = newChart
     this.setState({
       charts,
-      ...this.state
+      ...this.state,
     })
   }
 
@@ -463,6 +469,88 @@ class App extends React.Component<{}, any> {
   }
 
   render() {
+    const { loading } = this.state
+    const today = new Date()
+
+    return (
+      <div className="App">
+        <div className="title">
+          <svg className="logo" viewBox="0 0 40 40">
+            <path d="M34.4,16.5c-1.6,0-2.8,1.1-3.1,2.6h-1c-0.1-2.6-1.2-5-2.9-6.8l1.7-1.7c0.5,0.4,1.2,0.7,1.9,0.7c1.7,0,3.1-1.4,3.1-3.1
+              c0-1.7-1.4-3.1-3.1-3.1S28,6.5,28,8.2c0,0.6,0.2,1.2,0.5,1.7l-1.8,1.8C25,10,22.6,9,20.1,8.9V7.8c0,0,0,0,0,0
+              c1.5-0.2,2.6-1.5,2.6-3.1c0-1.7-1.4-3.1-3.1-3.1S16.5,3,16.5,4.7c0,1.6,1.1,2.8,2.6,3.1c0,0,0,0,0,0v1.1c-2.6,0.1-4.9,1.1-6.7,2.8
+              L11.7,11c0.4-0.5,0.6-1.1,0.6-1.8c0-1.7-1.4-3.1-3.1-3.1C7.4,6,6,7.4,6,9.2c0,1.7,1.4,3.1,3.1,3.1c0.7,0,1.3-0.2,1.8-0.6l0.7,0.7
+              C10,14.2,9,16.6,8.8,19.2H8c-0.2-1.5-1.5-2.6-3.1-2.6c-1.7,0-3.1,1.4-3.1,3.1c0,1.7,1.4,3.1,3.1,3.1c1.6,0,2.8-1.1,3.1-2.6h0.9
+              c0.1,2.6,1.2,5,2.8,6.8l-1.3,1.3c0,0,0,0.1-0.1,0.1c-0.5-0.4-1.2-0.6-1.9-0.6c-1.7,0-3.1,1.4-3.1,3.1s1.4,3.1,3.1,3.1
+              s3.1-1.4,3.1-3.1c0-0.7-0.2-1.3-0.6-1.8c0,0,0.1,0,0.1-0.1l1.3-1.3c1.8,1.6,4.2,2.7,6.7,2.8v0.9c-1.5,0.2-2.7,1.5-2.7,3.1
+              c0,1.7,1.4,3.1,3.1,3.1s3.1-1.4,3.1-3.1c0-1.5-1.1-2.8-2.6-3.1v-0.9c2.6-0.1,5-1.2,6.8-2.9l0.7,0.7c-0.4,0.5-0.7,1.2-0.7,1.9
+              c0,1.7,1.4,3.1,3.1,3.1s3.1-1.4,3.1-3.1s-1.4-3.1-3.1-3.1c-0.6,0-1.2,0.2-1.7,0.5l-0.7-0.7c1.6-1.8,2.6-4.1,2.7-6.7h1
+              c0.2,1.5,1.5,2.6,3.1,2.6c1.7,0,3.1-1.4,3.1-3.1C37.5,17.9,36.1,16.5,34.4,16.5z M4.9,21.8c-1.2,0-2.1-1-2.1-2.1s1-2.1,2.1-2.1
+              s2.1,1,2.1,2.1S6,21.8,4.9,21.8z M8.4,32.9c-1.2,0-2.1-1-2.1-2.1s1-2.1,2.1-2.1s2.1,1,2.1,2.1S9.6,32.9,8.4,32.9z M31.1,6.1
+              c1.2,0,2.1,1,2.1,2.1s-1,2.1-2.1,2.1S29,9.4,29,8.2S30,6.1,31.1,6.1z M17.5,4.7c0-1.2,1-2.1,2.1-2.1s2.1,1,2.1,2.1s-1,2.1-2.1,2.1
+              S17.5,5.9,17.5,4.7z M9.1,11.3c-1.2,0-2.1-1-2.1-2.1S7.9,7,9.1,7s2.1,1,2.1,2.1S10.3,11.3,9.1,11.3z M21.7,34.4c0,1.2-1,2.1-2.1,2.1
+              s-2.1-1-2.1-2.1c0-1.2,1-2.1,2.1-2.1S21.7,33.2,21.7,34.4z M32.2,30.2c0,1.2-1,2.1-2.1,2.1s-2.1-1-2.1-2.1s1-2.1,2.1-2.1
+              S32.2,29,32.2,30.2z M26.9,26.1l-1.3-1.3c-0.2-0.2-0.5-0.2-0.7,0c-0.2,0.2-0.2,0.5,0,0.7l1.3,1.3c-1.6,1.5-3.7,2.4-6.1,2.6v-2.2
+              c0-0.3-0.2-0.5-0.5-0.5s-0.5,0.2-0.5,0.5v2.2c-2.3-0.1-4.4-1-6-2.5l1.1-1.1c0.2-0.2,0.2-0.5,0-0.7s-0.5-0.2-0.7,0l-1.1,1.1
+              c-1.5-1.6-2.4-3.7-2.5-6.1h1.8c0.2,1.5,1.5,2.6,3.1,2.6c1.7,0,3.1-1.4,3.1-3.1c0-1.7-1.4-3.1-3.1-3.1c-1.6,0-2.8,1.1-3.1,2.6H9.8
+              c0.1-2.3,1.1-4.5,2.5-6.1l1.5,1.5c0.1,0.1,0.2,0.1,0.4,0.1c0.1,0,0.3,0,0.4-0.1c0.2-0.2,0.2-0.5,0-0.7l-1.5-1.4
+              c1.6-1.4,3.7-2.4,6-2.5v2.2c0,0.3,0.2,0.5,0.5,0.5s0.5-0.2,0.5-0.5V9.9c2.3,0.1,4.3,1,5.9,2.4l-0.6,0.6c-0.2,0.2-0.2,0.5,0,0.7
+              c0.1,0.1,0.2,0.1,0.4,0.1s0.3,0,0.4-0.1l0.6-0.6c1.5,1.6,2.5,3.8,2.6,6.1H27c-0.3,0-0.5,0.2-0.5,0.5s0.2,0.5,0.5,0.5h2.3
+              C29.2,22.5,28.3,24.5,26.9,26.1z M12.6,19.7c0-1.2,1-2.1,2.1-2.1s2.1,1,2.1,2.1s-1,2.1-2.1,2.1S12.6,20.8,12.6,19.7z M34.4,21.8
+              c-1.2,0-2.1-1-2.1-2.1s1-2.1,2.1-2.1s2.1,1,2.1,2.1S35.5,21.8,34.4,21.8z M21.4,12.8c-1.7,0-3.1,1.4-3.1,3.1c0,1.7,1.4,3.1,3.1,3.1
+              c1.7,0,3.1-1.4,3.1-3.1C24.6,14.2,23.2,12.8,21.4,12.8z M21.4,18.1c-1.2,0-2.1-1-2.1-2.1s1-2.1,2.1-2.1c1.2,0,2.1,1,2.1,2.1
+              S22.6,18.1,21.4,18.1z M21.1,20.3c-1.7,0-3.1,1.4-3.1,3.1s1.4,3.1,3.1,3.1s3.1-1.4,3.1-3.1S22.8,20.3,21.1,20.3z M21.1,25.6
+              c-1.2,0-2.1-1-2.1-2.1c0-1.2,1-2.1,2.1-2.1c1.2,0,2.1,1,2.1,2.1C23.2,24.6,22.3,25.6,21.1,25.6z"/>
+          </svg>
+          <h1 className="heading">US Covid-19 Statistics</h1>
+        </div>
+        <p className="blurb">
+          This tool gathers and visually presents publicly available covid-19 related data using charts. It collects open source information from the following government and public organizations:
+          {' '}<a href="https://www.cdc.gov/" target="_blank" rel="noreferrer">Centers for Disease Control and Prevention</a>, 
+          {' '}<a href="https://healthdata.gov/" target="_blank" rel="noreferrer">Health Data</a>, 
+          and <a href="http://www.nhit.org/" target="_blank" rel="noreferrer">National Health IT Collaborative for the Underserved</a>. 
+          It generates time period cases, vaccination data, testing statistics and hospitalized patient numbers. The information provided 
+          gives insight to the effect of the virus to the community, shows trend by comparing historical results and provides a tool to 
+          identify society's contribution to the increase or decrease of the virus' spread.
+          <br/><br/>
+          To begin select a state from the drop down (take note that some data presented might not be current &mdash; this is because of to data verifications and reconciliations which takes time before it can be uploaded and then used.)
+          <br/>
+          If you would like to contribute to this project please visit the <a href="https://github.com/rabyyuson/covid-stats" target="_blank" rel="noreferrer">project repository</a> or send me an <a href="mailto:rabyyusondev@gmail.com">email</a>. 
+        </p>
+        <select
+          className="dropdown"
+          onChange={(event) => this.handleOnChange(event.target.value)}
+        >
+          <option>Select a state</option>
+          {
+            usStates.map((state, index) => {
+              return (
+                <option
+                  key={index}
+                  value={[state.name, state.abbreviation]}
+                >
+                  {state.name}
+                </option>
+              )
+            })
+          }
+        </select>
+
+        {loading && (
+          <div className="loading">
+            Fetching data. Please wait...
+          </div>
+        )}
+        {!loading && this.renderData()}
+        
+        <div className="footer">
+          <a href="https://rabyyuson.dev/">{today.getFullYear()}. Raby Yuson.</a>
+        </div>
+      </div>
+    );
+  }
+
+  renderData() {
     const {
       cdc,
       fusioncenter,
@@ -484,8 +572,6 @@ class App extends React.Component<{}, any> {
       vaccineFederalPharmacyPartnershipForLongTermCareProgram,
     } = fusioncenter
 
-    const canvasWrapperStyles = {
-    }
     const canvasStyle = {
       Position: 'relative',
       width: '100%',
@@ -495,44 +581,11 @@ class App extends React.Component<{}, any> {
     }
 
     return (
-      <div className="App">
-        <h1 className="heading">US Covid-19 Statistics</h1>
-        <p className="blurb">
-          This tool gathers and visually presents publicly available covid-19 related datasets using charts to show time period cases, 
-          vaccine data, testing statistics and hospitalized patient numbers. It collects resources from the following government agencies and public organizations:
-          {' '}<a href="https://www.cdc.gov/" target="_blank" rel="noreferrer">Centers for Disease Control and Prevention</a>, 
-          {' '}<a href="https://healthdata.gov/" target="_blank" rel="noreferrer">Health Data</a>, 
-          and <a href="http://www.nhit.org/" target="_blank" rel="noreferrer">National Health IT Collaborative for the Underserved</a>.
-          {' '}This tool is intended for informational purposes only to inform the public of the virus' trends and also to compare historical data.
-          <br/><br/>
-          If you would like to contribute to the project check out the <a href="https://github.com/rabyyuson/covid-stats" target="_blank" rel="noreferrer">project repository</a>. 
-          To begin select a state from the drop down.
-        </p>
-        <select
-          className="dropdown"
-          onChange={(event) => this.handleOnChange(event.target.value)}
-        >
-          <option>Select a state</option>
-          {
-            usStates.map((state, index) => {
-              return (
-                <option
-                  key={index}
-                  value={[state.name, state.abbreviation]}
-                >
-                  {state.name}
-                </option>
-              )
-            })
-          }
-        </select>
-
+      <>
         {Boolean(vaccineDistributionsAndAdministration.length) && (
           <>
-            <div style={canvasWrapperStyles}>
-              <div style={canvasStyle}>
-                <canvas ref={this.vaccineDistributionAndAdministrationRef} />
-              </div>
+            <div style={canvasStyle}>
+              <canvas ref={this.vaccineDistributionAndAdministrationRef} />
             </div>
           </>
         )}
@@ -542,67 +595,57 @@ class App extends React.Component<{}, any> {
           (polymeraseChainReactionNegative && Boolean(polymeraseChainReactionNegative.length))
         ) && (
           <>
-            <div style={canvasWrapperStyles}>
-              <div style={canvasStyle}>
-                <canvas ref={this.polymeraseChainReactionNegativeRef} />
-              </div>
+            <div style={canvasStyle}>
+              <canvas ref={this.polymeraseChainReactionNegativeRef} />
+            </div>
 
-              <div style={canvasStyle}>
-                <canvas ref={this.polymeraseChainReactionPositiveRef} />
-              </div>
+            <div style={canvasStyle}>
+              <canvas ref={this.polymeraseChainReactionPositiveRef} />
             </div>
           </>
         )}
 
         {Boolean(patientImpactAndHospitalCapacity.length) && (
           <>
-            <div style={canvasWrapperStyles}>
-              <div style={canvasStyle}>
-                <canvas ref={this.confirmedHospitalizedAdultsRef} />
-              </div>
+            <div style={canvasStyle}>
+              <canvas ref={this.confirmedHospitalizedAdultsRef} />
+            </div>
 
-              <div style={canvasStyle}>
-                <canvas ref={this.confirmedHospitalizedChildrenRef} />
-              </div>
+            <div style={canvasStyle}>
+              <canvas ref={this.confirmedHospitalizedChildrenRef} />
             </div>
           </>
         )}
 
         {Boolean(casesAndDeathsByStateOverTime.length) && (
           <>
-            <div style={canvasWrapperStyles}>
-              <div style={canvasStyle}>
-                <canvas ref={this.confirmedCasesRef} />
-              </div>
-              
-              <div style={canvasStyle}>
-                <canvas ref={this.confirmedDeathsRef} />
-              </div>
+            <div style={canvasStyle}>
+              <canvas ref={this.confirmedCasesRef} />
+            </div>
+            
+            <div style={canvasStyle}>
+              <canvas ref={this.confirmedDeathsRef} />
             </div>
 
-            <div style={canvasWrapperStyles}>
-              <div style={canvasStyle}>
-                <canvas ref={this.newCasesRef} />
-              </div>
-              
-              <div style={canvasStyle}>
-                <canvas ref={this.newDeathsRef} />
-              </div>
+            <div style={canvasStyle}>
+              <canvas ref={this.newCasesRef} />
+            </div>
+            
+            <div style={canvasStyle}>
+              <canvas ref={this.newDeathsRef} />
             </div>
           </>
         )}
 
         {Boolean(vaccineFederalPharmacyPartnershipForLongTermCareProgram.length) && (
           <>
-            <div style={canvasWrapperStyles}>
-              <div style={canvasStyle}>
-                <canvas ref={this.vaccineFederalPharmacyPartnershipForLongTermCareProgramRef} />
-              </div>
+            <div style={canvasStyle}>
+              <canvas ref={this.vaccineFederalPharmacyPartnershipForLongTermCareProgramRef} />
             </div>
           </>
         )}
-      </div>
-    );
+      </>
+    )
   }
 }
 
