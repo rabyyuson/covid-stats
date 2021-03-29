@@ -499,7 +499,7 @@ class App extends React.Component<{}, any> {
         <h1 className="heading">US Covid-19 Statistics</h1>
         <p className="blurb">
           This tool gathers and visually presents publicly available covid-19 related datasets using charts to show time period cases, 
-          vaccine data, testing statistics and hospitalized patients numbers. It collects resources from the following government agencies and public organizations:
+          vaccine data, testing statistics and hospitalized patient numbers. It collects resources from the following government agencies and public organizations:
           {' '}<a href="https://www.cdc.gov/" target="_blank" rel="noreferrer">Centers for Disease Control and Prevention</a>, 
           {' '}<a href="https://healthdata.gov/" target="_blank" rel="noreferrer">Health Data</a>, 
           and <a href="http://www.nhit.org/" target="_blank" rel="noreferrer">National Health IT Collaborative for the Underserved</a>.
