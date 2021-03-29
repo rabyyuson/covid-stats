@@ -152,7 +152,6 @@ class App extends React.Component<{}, any> {
       }),
     ])
       .then(data => {
-        console.log(data)
         this.setState({
           cdc: {
             casesAndDeathsByStateOverTime: data[0],
