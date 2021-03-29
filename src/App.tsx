@@ -505,7 +505,7 @@ class App extends React.Component<{}, any> {
           and <a href="http://www.nhit.org/" target="_blank" rel="noreferrer">National Health IT Collaborative for the Underserved</a>.
           {' '}This tool is intended for informational purposes only to inform the public of the virus' trends and also to compare historical data.
           <br/><br/>
-          If you would like to contribute to the project check out the <a href="https://github.com/rabyyuson/covid-stats" target="_blank" rel="nofollow">project repository</a>. 
+          If you would like to contribute to the project check out the <a href="https://github.com/rabyyuson/covid-stats" target="_blank" rel="noreferrer">project repository</a>. 
           To begin select a state from the drop down.
         </p>
         <select
