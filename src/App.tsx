@@ -463,7 +463,7 @@ class App extends React.Component<{}, any> {
         .replace('Received Counseling or Therapy', 'Took Counseling/Therapy')
         .replace('Took Medication And/Or Took Counseling/Therapy', 'Medication/Counseling/Therapy')
         .replace('Needed Counseling or Therapy But Did Not Get It', 'Did Not Get Counseling/Therapy')
-      console.log(filteredLabel)
+      customData.labels.push(filteredLabel)
 
       const filteredData = data[item].map((
         dataItem: dataItem,
