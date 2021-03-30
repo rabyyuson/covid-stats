@@ -512,7 +512,7 @@ class App extends React.Component<{}, any> {
           gives insight to the effect of the virus to the community, shows trend by comparing historical results and provides a tool to 
           identify society's contribution to the increase or decrease of the virus' spread.
           <br/><br/>
-          To begin select a state from the drop down (take note that some data presented might not be current &mdash; this is because of data verifications and reconciliations which takes time before it can be uploaded and then used.)
+          To begin select a state from the drop down (take note that some data presented might not be current &mdash; this is because of data verifications and reconciliations which takes time before it can be updated).
           <br/><br/>
           If you would like to contribute to this project please visit the <a href="https://github.com/rabyyuson/us-covid-19-statistics" target="_blank" rel="noreferrer">project repository</a> or send me an <a href="mailto:rabyyusondev@gmail.com">email</a>. 
         </p>
