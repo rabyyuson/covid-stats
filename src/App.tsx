@@ -460,10 +460,10 @@ class App extends React.Component<{}, any> {
         .replace(/Symptoms of /, '')
         .replace('Anxiety Disorder or Depressive Disorder', 'Anxiety/Depressive Disorder')
         .replace('Took Prescription Medication for Mental Health', 'Took Medication')
-        .replace('Received Counseling or Therapy', 'Received Counseling/Therapy')
-        .replace('Took Medication And/Or Received Counseling/Therapy', 'Took Medication/Counseling or Therapy')
+        .replace('Received Counseling or Therapy', 'Took Counseling/Therapy')
+        .replace('Took Medication And/Or Took Counseling/Therapy', 'Medication/Counseling/Therapy')
         .replace('Needed Counseling or Therapy But Did Not Get It', 'Did Not Get Counseling/Therapy')
-      customData.labels.push(filteredLabel)
+      console.log(filteredLabel)
 
       const filteredData = data[item].map((
         dataItem: dataItem,
