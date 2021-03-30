@@ -417,7 +417,7 @@ class App extends React.Component<{}, any> {
             data: groupBy(anxietyAndDisorder, 'indicator'),
             keyword: 'value',
           }),
-          label: 'Anxiety and Disorder (Average Percentage)',
+          label: 'Anxiety and Disorder - Percentage',
           ref: this.anxietyAndDisorderRef,
         })
 
@@ -431,7 +431,7 @@ class App extends React.Component<{}, any> {
             data: groupBy(mentalHealthCare, 'indicator'),
             keyword: 'value',
           }),
-          label: 'Mental Healthcare (Average Percentage)',
+          label: 'Mental Healthcare - Percentage',
           ref: this.mentalHealthCareRef,
         })
       })
