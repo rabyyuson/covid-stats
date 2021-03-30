@@ -3,6 +3,11 @@ import usStates from 'states-us'
 import { format } from 'date-fns'
 import React from 'react'
 import Chart from 'chart.js'
+import {
+  get,
+  groupBy,
+  mean,
+}  from 'lodash'
 import './App.css';
 
 const CONFIG = {
@@ -12,8 +17,10 @@ const CONFIG = {
     fusioncenter_base_url: 'https://fusioncenter.nhit.org/resource/',
     healthdata_base_url: 'https://healthdata.gov/resource/',
     dataset_identifiers: {
+      anxiety_and_disorder: '8pt5-q6wp',
       cases_and_deaths_by_state_over_time: '9mfq-cb36',
       diagnostic_laboratory_polymerase_chain_reaction_testing: 'j8mb-icvb',
+      mental_health_care: 'yni7-er2q',
       patient_impact_and_hospital_capacity: 'g62h-syeh',
       vaccine_distributions_and_administration: 'q8wb-4vhy',
       vaccine_federal_pharmacy_partnership_for_long_term_care_program: 'p27c-rmkm',
@@ -59,6 +66,8 @@ class App extends React.Component<{}, any> {
   polymeraseChainReactionNegativeRef: React.RefObject<HTMLCanvasElement>
   vaccineDistributionAndAdministrationRef: React.RefObject<HTMLCanvasElement>
   vaccineFederalPharmacyPartnershipForLongTermCareProgramRef: React.RefObject<HTMLCanvasElement>
+  anxietyAndDisorderRef: React.RefObject<HTMLCanvasElement>
+  mentalHealthCareRef: React.RefObject<HTMLCanvasElement>
 
   constructor(props: any) {
     super(props)
@@ -73,15 +82,20 @@ class App extends React.Component<{}, any> {
     this.polymeraseChainReactionNegativeRef = React.createRef()
     this.vaccineDistributionAndAdministrationRef = React.createRef()
     this.vaccineFederalPharmacyPartnershipForLongTermCareProgramRef = React.createRef()
+    this.anxietyAndDisorderRef = React.createRef()
+    this.mentalHealthCareRef = React.createRef()
 
     this.handleOnChange = this.handleOnChange.bind(this)
     this.fetchData = this.fetchData.bind(this)
+    this.aggregateData = this.aggregateData.bind(this)
     this.setChart = this.setChart.bind(this)
     this.renderData = this.renderData.bind(this)
 
     this.state = {
       cdc: {
+        anxietyAndDisorder: [],
         casesAndDeathsByStateOverTime: [],
+        mentalHealthCare: [],
       },
       fusioncenter: {
         vaccineDistributionsAndAdministration: [],
@@ -107,8 +121,10 @@ class App extends React.Component<{}, any> {
       dataset_identifiers,
     } = socrata
     const {
+      anxiety_and_disorder,
       cases_and_deaths_by_state_over_time,
       diagnostic_laboratory_polymerase_chain_reaction_testing,
+      mental_health_care,
       patient_impact_and_hospital_capacity,
       vaccine_distributions_and_administration,
       vaccine_federal_pharmacy_partnership_for_long_term_care_program,
@@ -166,11 +182,27 @@ class App extends React.Component<{}, any> {
         datasetIdentifier: vaccine_federal_pharmacy_partnership_for_long_term_care_program,
         filters: `&state_territory=${stateName}`,
       }),
+
+      // Anxiety and Disorder
+      fetchJSONData({
+        baseUrl: cdc_base_url,
+        datasetIdentifier: anxiety_and_disorder,
+        filters: `&state=${stateName}`,
+      }),
+
+      // Mental Healthcare
+      fetchJSONData({
+        baseUrl: cdc_base_url,
+        datasetIdentifier: mental_health_care,
+        filters: `&state=${stateName}`,
+      }),
     ])
       .then(data => {
         this.setState({
           cdc: {
+            anxietyAndDisorder: data[6],
             casesAndDeathsByStateOverTime: data[0],
+            mentalHealthCare: data[7],
           },
           fusioncenter: {
             vaccineDistributionsAndAdministration: data[4],
@@ -192,7 +224,9 @@ class App extends React.Component<{}, any> {
           healthdata,
         } = this.state
         const {
+          anxietyAndDisorder,
           casesAndDeathsByStateOverTime,
+          mentalHealthCare,
         } = cdc
         const {
           diagnosticLaboratoryPolymeraseChainReactionTesting,
@@ -203,8 +237,8 @@ class App extends React.Component<{}, any> {
           negative: polymeraseChainReactionNegative,
         } = diagnosticLaboratoryPolymeraseChainReactionTesting
         const {
-          vaccineDistributionsAndAdministration: vaccDistAdmin,
-          vaccineFederalPharmacyPartnershipForLongTermCareProgram: vaccFedPharPartLTC,
+          vaccineDistributionsAndAdministration,
+          vaccineFederalPharmacyPartnershipForLongTermCareProgram,
         } = fusioncenter
 
         // Vaccine Distribution and Administration
@@ -224,14 +258,14 @@ class App extends React.Component<{}, any> {
               'People with 2nd dose per 100k',
             ],
             datasetData: [
-              vaccDistAdmin && vaccDistAdmin[0] && vaccDistAdmin[0].total_distributed,
-              vaccDistAdmin && vaccDistAdmin[0] && vaccDistAdmin[0].total_administered,
-              vaccDistAdmin && vaccDistAdmin[0] && vaccDistAdmin[0].distributed_per_100k,
-              vaccDistAdmin && vaccDistAdmin[0] && vaccDistAdmin[0].administered_per_100k,
-              vaccDistAdmin && vaccDistAdmin[0] && vaccDistAdmin[0].people_with_1_doses,
-              vaccDistAdmin && vaccDistAdmin[0] && vaccDistAdmin[0].people_with_1_doses_per_100k,
-              vaccDistAdmin && vaccDistAdmin[0] && vaccDistAdmin[0].people_with_2_doses,
-              vaccDistAdmin && vaccDistAdmin[0] && vaccDistAdmin[0].people_with_2_doses_per_100k,
+              get(vaccineDistributionsAndAdministration, '[0].total_distributed'),
+              get(vaccineDistributionsAndAdministration, '[0].total_administered'),
+              get(vaccineDistributionsAndAdministration, '[0].distributed_per_100k'),
+              get(vaccineDistributionsAndAdministration, '[0].administered_per_100k'),
+              get(vaccineDistributionsAndAdministration, '[0].people_with_1_doses'),
+              get(vaccineDistributionsAndAdministration, '[0].people_with_1_doses_per_100k'),
+              get(vaccineDistributionsAndAdministration, '[0].people_with_2_doses'),
+              get(vaccineDistributionsAndAdministration, '[0].people_with_2_doses_per_100k'),
             ],
           },
           label: 'Vaccine Distribution and Administration',
@@ -363,16 +397,74 @@ class App extends React.Component<{}, any> {
               'People with 2nd Dose',
             ],
             datasetData: [
-              vaccFedPharPartLTC && vaccFedPharPartLTC[0] && vaccFedPharPartLTC[0].total_ltc_doses_adminstered,
-              vaccFedPharPartLTC && vaccFedPharPartLTC[0] && vaccFedPharPartLTC[0].people_in_ltc_with_1_doses,
-              vaccFedPharPartLTC && vaccFedPharPartLTC[0] && vaccFedPharPartLTC[0].people_in_ltc_with_2_doses,
+              get(vaccineFederalPharmacyPartnershipForLongTermCareProgram, '[0].total_ltc_doses_adminstered'),
+              get(vaccineFederalPharmacyPartnershipForLongTermCareProgram, '[0].people_in_ltc_with_1_doses'),
+              get(vaccineFederalPharmacyPartnershipForLongTermCareProgram, '[0].people_in_ltc_with_2_doses'),
             ],
           },
           data: casesAndDeathsByStateOverTime,
           label: 'Federal Pharmacy Partnership for Long Term Care Program',
           ref: this.vaccineFederalPharmacyPartnershipForLongTermCareProgramRef,
         })
+
+        // Anxiety and Disorder
+        this.setChart({
+          id: 'anxietyAndDisorder',
+          chartType: 'horizontalBar',
+          color: 'rgb(242,57,57,0.75)',
+          data: anxietyAndDisorder,
+          customData: this.aggregateData({
+            data: groupBy(anxietyAndDisorder, 'indicator'),
+            keyword: 'value',
+          }),
+          label: 'Anxiety and Disorder (Average Percentage)',
+          ref: this.anxietyAndDisorderRef,
+        })
+
+        // Mental Healthcare
+        this.setChart({
+          id: 'mentalHealthCare',
+          chartType: 'horizontalBar',
+          color: 'rgb(242,57,57,0.75)',
+          data: mentalHealthCare,
+          customData: this.aggregateData({
+            data: groupBy(mentalHealthCare, 'indicator'),
+            keyword: 'value',
+          }),
+          label: 'Mental Healthcare (Average Percentage)',
+          ref: this.mentalHealthCareRef,
+        })
       })
+  }
+
+  aggregateData({
+    data,
+    keyword,
+  }:
+  {
+    data: any;
+    keyword: string;
+  }) {
+    const customData:
+    {
+      labels: string[],
+      datasetData: number[]
+    } = {
+      labels: [],
+      datasetData: [],
+    }
+    
+    for(const item in data) {
+      const filteredLabel = item.replace(/, Last.*/, '')
+      customData.labels.push(filteredLabel)
+
+      const filteredData = data[item].map((
+        dataItem: dataItem,
+      ) => Number(dataItem[keyword]))
+      customData.datasetData.push(Number(mean(filteredData).toFixed(2)))
+    }
+
+    return customData
   }
 
   setChart({
@@ -537,7 +629,7 @@ class App extends React.Component<{}, any> {
 
         {loading && (
           <div className="loading">
-            Fetching data. Please wait...
+            Fetching results. Please wait...
           </div>
         )}
         {!loading && this.renderData()}
@@ -556,7 +648,9 @@ class App extends React.Component<{}, any> {
       healthdata,
     } = this.state
     const {
+      anxietyAndDisorder,
       casesAndDeathsByStateOverTime,
+      mentalHealthCare,
     } = cdc
     const {
       diagnosticLaboratoryPolymeraseChainReactionTesting,
@@ -588,16 +682,17 @@ class App extends React.Component<{}, any> {
             </div>
           </>
         )}
-        
-        {(
-          (polymeraseChainReactionPositive && Boolean(polymeraseChainReactionPositive.length)) && 
-          (polymeraseChainReactionNegative && Boolean(polymeraseChainReactionNegative.length))
-        ) && (
+
+        {(polymeraseChainReactionNegative && Boolean(polymeraseChainReactionNegative.length)) && (
           <>
             <div style={canvasStyle}>
               <canvas ref={this.polymeraseChainReactionNegativeRef} />
             </div>
-
+          </>
+        )}
+        
+        {(polymeraseChainReactionPositive && Boolean(polymeraseChainReactionPositive.length)) && (
+          <>
             <div style={canvasStyle}>
               <canvas ref={this.polymeraseChainReactionPositiveRef} />
             </div>
@@ -640,6 +735,22 @@ class App extends React.Component<{}, any> {
           <>
             <div style={canvasStyle}>
               <canvas ref={this.vaccineFederalPharmacyPartnershipForLongTermCareProgramRef} />
+            </div>
+          </>
+        )}
+
+        {Boolean(anxietyAndDisorder.length) && (
+          <>
+            <div style={canvasStyle}>
+              <canvas ref={this.anxietyAndDisorderRef} />
+            </div>
+          </>
+        )}
+
+        {Boolean(mentalHealthCare.length) && (
+          <>
+            <div style={canvasStyle}>
+              <canvas ref={this.mentalHealthCareRef} />
             </div>
           </>
         )}
