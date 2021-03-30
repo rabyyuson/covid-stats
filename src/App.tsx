@@ -455,7 +455,14 @@ class App extends React.Component<{}, any> {
     }
     
     for(const item in data) {
-      const filteredLabel = item.replace(/, Last.*/, '')
+      const filteredLabel = item
+        .replace(/, Last.*/, '')
+        .replace(/Symptoms of /, '')
+        .replace('Anxiety Disorder or Depressive Disorder', 'Anxiety/Depressive Disorder')
+        .replace('Took Prescription Medication for Mental Health', 'Took Medication')
+        .replace('Received Counseling or Therapy', 'Received Counseling/Therapy')
+        .replace('Took Medication And/Or Received Counseling/Therapy', 'Took Medication/Counseling or Therapy')
+        .replace('Needed Counseling or Therapy But Did Not Get It', 'Did Not Get Counseling/Therapy')
       customData.labels.push(filteredLabel)
 
       const filteredData = data[item].map((
@@ -731,14 +738,6 @@ class App extends React.Component<{}, any> {
           </>
         )}
 
-        {Boolean(vaccineFederalPharmacyPartnershipForLongTermCareProgram.length) && (
-          <>
-            <div style={canvasStyle}>
-              <canvas ref={this.vaccineFederalPharmacyPartnershipForLongTermCareProgramRef} />
-            </div>
-          </>
-        )}
-
         {Boolean(anxietyAndDisorder.length) && (
           <>
             <div style={canvasStyle}>
@@ -751,6 +750,14 @@ class App extends React.Component<{}, any> {
           <>
             <div style={canvasStyle}>
               <canvas ref={this.mentalHealthCareRef} />
+            </div>
+          </>
+        )}
+
+        {Boolean(vaccineFederalPharmacyPartnershipForLongTermCareProgram.length) && (
+          <>
+            <div style={canvasStyle}>
+              <canvas ref={this.vaccineFederalPharmacyPartnershipForLongTermCareProgramRef} />
             </div>
           </>
         )}
