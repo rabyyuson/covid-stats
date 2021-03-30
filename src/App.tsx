@@ -168,7 +168,6 @@ class App extends React.Component<{}, any> {
       }),
     ])
       .then(data => {
-        console.log(data)
         this.setState({
           cdc: {
             casesAndDeathsByStateOverTime: data[0],
@@ -204,8 +203,8 @@ class App extends React.Component<{}, any> {
           negative: polymeraseChainReactionNegative,
         } = diagnosticLaboratoryPolymeraseChainReactionTesting
         const {
-          vaccineDistributionsAndAdministration,
-          vaccineFederalPharmacyPartnershipForLongTermCareProgram,
+          vaccineDistributionsAndAdministration: vaccDistAdmin,
+          vaccineFederalPharmacyPartnershipForLongTermCareProgram: vaccFedPharPartLTC,
         } = fusioncenter
 
         // Vaccine Distribution and Administration
@@ -225,14 +224,14 @@ class App extends React.Component<{}, any> {
               'People with 2nd dose per 100k',
             ],
             datasetData: [
-              vaccineDistributionsAndAdministration[0].total_distributed,
-              vaccineDistributionsAndAdministration[0].total_administered,
-              vaccineDistributionsAndAdministration[0].distributed_per_100k,
-              vaccineDistributionsAndAdministration[0].administered_per_100k,
-              vaccineDistributionsAndAdministration[0].people_with_1_doses,
-              vaccineDistributionsAndAdministration[0].people_with_1_doses_per_100k,
-              vaccineDistributionsAndAdministration[0].people_with_2_doses,
-              vaccineDistributionsAndAdministration[0].people_with_2_doses_per_100k,
+              vaccDistAdmin && vaccDistAdmin[0] && vaccDistAdmin[0].total_distributed,
+              vaccDistAdmin && vaccDistAdmin[0] && vaccDistAdmin[0].total_administered,
+              vaccDistAdmin && vaccDistAdmin[0] && vaccDistAdmin[0].distributed_per_100k,
+              vaccDistAdmin && vaccDistAdmin[0] && vaccDistAdmin[0].administered_per_100k,
+              vaccDistAdmin && vaccDistAdmin[0] && vaccDistAdmin[0].people_with_1_doses,
+              vaccDistAdmin && vaccDistAdmin[0] && vaccDistAdmin[0].people_with_1_doses_per_100k,
+              vaccDistAdmin && vaccDistAdmin[0] && vaccDistAdmin[0].people_with_2_doses,
+              vaccDistAdmin && vaccDistAdmin[0] && vaccDistAdmin[0].people_with_2_doses_per_100k,
             ],
           },
           label: 'Vaccine Distribution and Administration',
@@ -364,9 +363,9 @@ class App extends React.Component<{}, any> {
               'People with 2nd Dose',
             ],
             datasetData: [
-              vaccineFederalPharmacyPartnershipForLongTermCareProgram[0].total_ltc_doses_adminstered,
-              vaccineFederalPharmacyPartnershipForLongTermCareProgram[0].people_in_ltc_with_1_doses,
-              vaccineFederalPharmacyPartnershipForLongTermCareProgram[0].people_in_ltc_with_2_doses,
+              vaccFedPharPartLTC && vaccFedPharPartLTC[0] && vaccFedPharPartLTC[0].total_ltc_doses_adminstered,
+              vaccFedPharPartLTC && vaccFedPharPartLTC[0] && vaccFedPharPartLTC[0].people_in_ltc_with_1_doses,
+              vaccFedPharPartLTC && vaccFedPharPartLTC[0] && vaccFedPharPartLTC[0].people_in_ltc_with_2_doses,
             ],
           },
           data: casesAndDeathsByStateOverTime,
@@ -515,7 +514,7 @@ class App extends React.Component<{}, any> {
           <br/><br/>
           To begin select a state from the drop down (take note that some data presented might not be current &mdash; this is because of data verifications and reconciliations which takes time before it can be uploaded and then used.)
           <br/><br/>
-          If you would like to contribute to this project please visit the <a href="https://github.com/rabyyuson/covid-stats" target="_blank" rel="noreferrer">project repository</a> or send me an <a href="mailto:rabyyusondev@gmail.com">email</a>. 
+          If you would like to contribute to this project please visit the <a href="https://github.com/rabyyuson/us-covid-19-statistics" target="_blank" rel="noreferrer">project repository</a> or send me an <a href="mailto:rabyyusondev@gmail.com">email</a>. 
         </p>
         <select
           className="dropdown"
