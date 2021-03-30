@@ -388,7 +388,7 @@ class App extends React.Component<{}, any> {
         // Vaccine Distribution and Administration
         this.setChart({
           id: 'vaccineFederalPharmacyPartnershipForLongTermCareProgram',
-          chartType: 'bar',
+          chartType: 'horizontalBar',
           color: 'rgb(0,155,59,0.75)',
           customData: {
             labels: [
