@@ -14,7 +14,7 @@ const CONFIG = {
   socrata: {
     app_token: '9UKsqjohDZQ5pRVegZbpkfSww',
     cdc_base_url: 'https://data.cdc.gov/resource/',
-    fusioncenter_base_url: 'https://fusioncenter.nhit.org/resource/',
+    nhit_base_url: 'https://fusioncenter.nhit.org/resource/',
     healthdata_base_url: 'https://healthdata.gov/resource/',
     dataset_identifiers: {
       anxiety_and_disorder: '8pt5-q6wp',
@@ -97,7 +97,7 @@ class App extends React.Component<{}, any> {
         casesAndDeathsByStateOverTime: [],
         mentalHealthCare: [],
       },
-      fusioncenter: {
+      nhit: {
         vaccineDistributionsAndAdministration: [],
         vaccineFederalPharmacyPartnershipForLongTermCareProgram: [],
       },
@@ -116,7 +116,7 @@ class App extends React.Component<{}, any> {
     const { socrata } = CONFIG
     const {
       cdc_base_url,
-      fusioncenter_base_url,
+      nhit_base_url,
       healthdata_base_url,
       dataset_identifiers,
     } = socrata
@@ -171,14 +171,14 @@ class App extends React.Component<{}, any> {
 
       // Vaccine Distributions and Administration
       fetchJSONData({
-        baseUrl: fusioncenter_base_url,
+        baseUrl: nhit_base_url,
         datasetIdentifier: vaccine_distributions_and_administration,
         filters: `&state_territory_federal_entity=${stateName}`,
       }),
 
       // Vaccine Administered through Federal Pharmacy Partnership for Long Term Care Program
       fetchJSONData({
-        baseUrl: fusioncenter_base_url,
+        baseUrl: nhit_base_url,
         datasetIdentifier: vaccine_federal_pharmacy_partnership_for_long_term_care_program,
         filters: `&state_territory=${stateName}`,
       }),
@@ -204,7 +204,7 @@ class App extends React.Component<{}, any> {
             casesAndDeathsByStateOverTime: data[0],
             mentalHealthCare: data[7],
           },
-          fusioncenter: {
+          nhit: {
             vaccineDistributionsAndAdministration: data[4],
             vaccineFederalPharmacyPartnershipForLongTermCareProgram: data[5],
           },
@@ -220,7 +220,7 @@ class App extends React.Component<{}, any> {
 
         const {
           cdc,
-          fusioncenter,
+          nhit,
           healthdata,
         } = this.state
         const {
@@ -239,7 +239,7 @@ class App extends React.Component<{}, any> {
         const {
           vaccineDistributionsAndAdministration,
           vaccineFederalPharmacyPartnershipForLongTermCareProgram,
-        } = fusioncenter
+        } = nhit
 
         // Vaccine Distribution and Administration
         this.setChart({
@@ -651,7 +651,7 @@ class App extends React.Component<{}, any> {
   renderData() {
     const {
       cdc,
-      fusioncenter,
+      nhit,
       healthdata,
     } = this.state
     const {
@@ -670,7 +670,7 @@ class App extends React.Component<{}, any> {
     const {
       vaccineDistributionsAndAdministration,
       vaccineFederalPharmacyPartnershipForLongTermCareProgram,
-    } = fusioncenter
+    } = nhit
 
     const canvasStyle = {
       Position: 'relative',

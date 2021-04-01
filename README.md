@@ -1,5 +1,7 @@
 # US Covid-19 Statistics
 
+[Launch application](https://us-covid-19-statistics.vercel.app/) or [learn more](https://rabyyuson.dev/projects/us-covid-19-statistics) about this project.
+
 A tool that gathers open sourced covid-19 related information and presents them using charts. It collects data through the following public organizations: [Centers for Disease Control and Prevention](https://www.cdc.gov/), [Health Data](https://healthdata.gov/), and [National Health IT Collaborative for the Underserved](http://www.nhit.org/).
 
 ### Requirements:
