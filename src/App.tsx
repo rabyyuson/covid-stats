@@ -682,7 +682,7 @@ class App extends React.Component<{}, any> {
 
     return (
       <>
-        {Boolean(vaccineDistributionsAndAdministration.length) && (
+        {Boolean(vaccineDistributionsAndAdministration && vaccineDistributionsAndAdministration.length) && (
           <>
             <div style={canvasStyle}>
               <canvas ref={this.vaccineDistributionAndAdministrationRef} />
@@ -690,7 +690,7 @@ class App extends React.Component<{}, any> {
           </>
         )}
 
-        {(polymeraseChainReactionNegative && Boolean(polymeraseChainReactionNegative.length)) && (
+        {Boolean(polymeraseChainReactionNegative && polymeraseChainReactionNegative.length) && (
           <>
             <div style={canvasStyle}>
               <canvas ref={this.polymeraseChainReactionNegativeRef} />
@@ -698,7 +698,7 @@ class App extends React.Component<{}, any> {
           </>
         )}
         
-        {(polymeraseChainReactionPositive && Boolean(polymeraseChainReactionPositive.length)) && (
+        {(Boolean(polymeraseChainReactionPositive && polymeraseChainReactionPositive.length)) && (
           <>
             <div style={canvasStyle}>
               <canvas ref={this.polymeraseChainReactionPositiveRef} />
@@ -706,7 +706,7 @@ class App extends React.Component<{}, any> {
           </>
         )}
 
-        {Boolean(patientImpactAndHospitalCapacity.length) && (
+        {Boolean(patientImpactAndHospitalCapacity && patientImpactAndHospitalCapacity.length) && (
           <>
             <div style={canvasStyle}>
               <canvas ref={this.confirmedHospitalizedAdultsRef} />
@@ -718,7 +718,7 @@ class App extends React.Component<{}, any> {
           </>
         )}
 
-        {Boolean(casesAndDeathsByStateOverTime.length) && (
+        {Boolean(casesAndDeathsByStateOverTime && casesAndDeathsByStateOverTime.length) && (
           <>
             <div style={canvasStyle}>
               <canvas ref={this.confirmedCasesRef} />
@@ -738,7 +738,7 @@ class App extends React.Component<{}, any> {
           </>
         )}
 
-        {Boolean(anxietyAndDisorder.length) && (
+        {Boolean(anxietyAndDisorder && anxietyAndDisorder.length) && (
           <>
             <div style={canvasStyle}>
               <canvas ref={this.anxietyAndDisorderRef} />
@@ -746,7 +746,7 @@ class App extends React.Component<{}, any> {
           </>
         )}
 
-        {Boolean(mentalHealthCare.length) && (
+        {Boolean(mentalHealthCare && mentalHealthCare.length) && (
           <>
             <div style={canvasStyle}>
               <canvas ref={this.mentalHealthCareRef} />
@@ -754,7 +754,7 @@ class App extends React.Component<{}, any> {
           </>
         )}
 
-        {Boolean(vaccineFederalPharmacyPartnershipForLongTermCareProgram.length) && (
+        {Boolean(vaccineFederalPharmacyPartnershipForLongTermCareProgram && vaccineFederalPharmacyPartnershipForLongTermCareProgram.length) && (
           <>
             <div style={canvasStyle}>
               <canvas ref={this.vaccineFederalPharmacyPartnershipForLongTermCareProgramRef} />
