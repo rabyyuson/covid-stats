@@ -1,5 +1,7 @@
 .App {
   padding: 20px;
+  margin: 0 auto;
+  max-width: 75%;
 }
 
 .App .title {
